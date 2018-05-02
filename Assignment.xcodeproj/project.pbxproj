@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		74BD54B5EA24C893E05F95EB /* Pods_Assignment.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AFF22BD00A196A1A376BA7D8 /* Pods_Assignment.framework */; };
 		D99C5864209A108A00155855 /* UIViewControllerExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = D99C5863209A108A00155855 /* UIViewControllerExtension.swift */; };
+		D99C5866209A293800155855 /* LocationCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = D99C5865209A293800155855 /* LocationCell.swift */; };
 		D9CC87B7209316CF0068F01F /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9CC87B6209316CF0068F01F /* AppDelegate.swift */; };
 		D9CC87B9209316CF0068F01F /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9CC87B8209316CF0068F01F /* ViewController.swift */; };
 		D9CC87BC209316CF0068F01F /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = D9CC87BA209316CF0068F01F /* Main.storyboard */; };
@@ -21,6 +22,7 @@
 		AFF22BD00A196A1A376BA7D8 /* Pods_Assignment.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Assignment.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		D32D7C469352BD4634055C38 /* Pods-Assignment.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Assignment.release.xcconfig"; path = "Pods/Target Support Files/Pods-Assignment/Pods-Assignment.release.xcconfig"; sourceTree = "<group>"; };
 		D99C5863209A108A00155855 /* UIViewControllerExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIViewControllerExtension.swift; sourceTree = "<group>"; };
+		D99C5865209A293800155855 /* LocationCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationCell.swift; sourceTree = "<group>"; };
 		D9CC87B3209316CF0068F01F /* Assignment.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Assignment.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D9CC87B6209316CF0068F01F /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		D9CC87B8209316CF0068F01F /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -58,6 +60,14 @@
 			path = Extension;
 			sourceTree = "<group>";
 		};
+		D99C5867209A294100155855 /* Cell */ = {
+			isa = PBXGroup;
+			children = (
+				D99C5865209A293800155855 /* LocationCell.swift */,
+			);
+			path = Cell;
+			sourceTree = "<group>";
+		};
 		D9CC87AA209316CF0068F01F = {
 			isa = PBXGroup;
 			children = (
@@ -79,10 +89,11 @@
 		D9CC87B5209316CF0068F01F /* Assignment */ = {
 			isa = PBXGroup;
 			children = (
-				D99C5862209A105E00155855 /* Extension */,
 				D9CC87B6209316CF0068F01F /* AppDelegate.swift */,
 				D9CC87B8209316CF0068F01F /* ViewController.swift */,
 				D9CC87BA209316CF0068F01F /* Main.storyboard */,
+				D99C5867209A294100155855 /* Cell */,
+				D99C5862209A105E00155855 /* Extension */,
 				D9CC87BD209316CF0068F01F /* Assets.xcassets */,
 				D9CC87BF209316D00068F01F /* LaunchScreen.storyboard */,
 				D9CC87C2209316D00068F01F /* Info.plist */,
@@ -235,6 +246,7 @@
 			files = (
 				D9CC87B9209316CF0068F01F /* ViewController.swift in Sources */,
 				D9CC87B7209316CF0068F01F /* AppDelegate.swift in Sources */,
+				D99C5866209A293800155855 /* LocationCell.swift in Sources */,
 				D99C5864209A108A00155855 /* UIViewControllerExtension.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

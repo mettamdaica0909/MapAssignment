@@ -18,9 +18,9 @@ class ViewController: UIViewController, UISearchBarDelegate, UITableViewDelegate
     
     private var locatorTask:AGSLocatorTask!
     private var suggestRequestOperation:AGSCancelable!
-    private var suggestResults:[AGSGeocodeResult]!
+    private var suggestResults:[AGSSuggestResult]!
     private var graphicsOverlay:AGSGraphicsOverlay!
-
+    
     
     private var isTableViewVisible = true
     private var isTableViewAnimating = false
@@ -45,6 +45,11 @@ class ViewController: UIViewController, UISearchBarDelegate, UITableViewDelegate
         //initialize the graphics overlay and add to the map view
         self.graphicsOverlay = AGSGraphicsOverlay()
         self.mapView.graphicsOverlays.add(self.graphicsOverlay)
+        
+        self.tableView.rowHeight = UITableViewAutomaticDimension
+        self.tableView.estimatedRowHeight = 44
+        self.tableView.delegate = self
+        self.tableView.dataSource = self
         
         self.searchBar.placeholder = "Enter place"
     }
@@ -71,31 +76,47 @@ class ViewController: UIViewController, UISearchBarDelegate, UITableViewDelegate
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "cellID")!
-    
-        let suggestResult = self.suggestResults[indexPath.row]
-        cell.textLabel?.text = suggestResult.label
-        cell.imageView?.image = nil
+        let cell = tableView.dequeueReusableCell(withIdentifier: "LocationCell", for: indexPath) as! LocationCell
+        
+        if (self.suggestResults.count > 0) {
+            let suggestResult = self.suggestResults[indexPath.row]
+            cell.contentLabel.text = suggestResult.label
+            cell.locationImage.isHidden = false
+        } else {
+            cell.contentLabel.text = "There is no result"
+            cell.locationImage.isHidden = true
+        }
+        
         return cell
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        //create a graphic for the first result and add to the graphics overlay
-        let graphic = self.graphicForPoint(self.suggestResults[indexPath.row].displayLocation!, attributes: self.suggestResults[indexPath.row].attributes as [String : AnyObject]?)
-        self.graphicsOverlay.graphics.add(graphic)
-        //zoom to the extent of the result
-        if let extent = self.suggestResults[indexPath.row].extent {
-            self.mapView.setViewpointGeometry(extent, completion: nil)
+        self.locatorTask.geocode(with: self.suggestResults[indexPath.row]) { (result, error) in
+            if let error = error {
+                print("Error : %@",error.localizedDescription)
+            } else {
+                // create a graphic for the first result and add to the graphics overlay
+                let graphic = self.graphicForPoint((result?.first?.displayLocation)!, attributes: result?.first?.attributes as [String : AnyObject]?)
+                self.graphicsOverlay.graphics.add(graphic)
+                //zoom to the extent of the result
+                if let extent = result?.first?.extent {
+                    self.mapView.setViewpointGeometry(extent, completion: nil)
+                }
+                self.searchBar.text = self.suggestResults[indexPath.row].label
+                self.view.endEditing(true)
+                self.animateTableView(expand: false)
+            }
         }
-        self.searchBar.text = self.suggestResults[indexPath.row].label
-        self.view.endEditing(true)
-        self.animateTableView(expand: false)
+    }
+    
+    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        return UITableViewAutomaticDimension
     }
     
     private func animateTableView(expand:Bool) {
         if (expand != self.isTableViewVisible) && !self.isTableViewAnimating {
             self.isTableViewAnimating = true
-            self.tableviewheightContrains.constant = expand ? CGFloat(self.suggestResults.count * 50) : 0
+            self.tableviewheightContrains.constant = expand ? CGFloat(self.suggestResults.count * 44) : 0
             UIView.animate(withDuration: 0.1, animations: { [weak self] () -> Void in
                 self?.view.layoutIfNeeded()
                 }, completion: { [weak self] (finished) -> Void in
@@ -106,17 +127,14 @@ class ViewController: UIViewController, UISearchBarDelegate, UITableViewDelegate
     }
     
     private func getSuggestions(searchString : String) {
+        //remove all previous graphics
+        self.graphicsOverlay.graphics.removeAllObjects()
+        
         if self.suggestRequestOperation != nil {
             self.suggestRequestOperation.cancel()
         }
         
-        let suggestParameters = AGSGeocodeParameters()
-//        let currentExtent = self.mapView.currentViewpoint(with: AGSViewpointType.boundingGeometry)?.targetGeometry
-        suggestParameters.searchArea = self.mapView.
-        suggestParameters.countryCode = "Vietnam"
-        suggestParameters.maxResults = 10
-    
-        self.suggestRequestOperation = self.locatorTask.geocode(withSearchText: searchString, parameters: suggestParameters) { (result: [AGSGeocodeResult]?, error: Error?) -> Void in
+        self.suggestRequestOperation = self.locatorTask.suggest(withSearchText: searchString, completion: { (result, error) in
             if let error = error {
                 print(error.localizedDescription)
                 self.suggestResults = []
@@ -127,11 +145,11 @@ class ViewController: UIViewController, UISearchBarDelegate, UITableViewDelegate
                 self.suggestResults = result
                 self.tableView.reloadData()
             }
-        }
+        })
     }
     
     private func graphicForPoint(_ point: AGSPoint, attributes: [String: AnyObject]?) -> AGSGraphic {
-        let markerImage = UIImage(named: "icons8-map-pin-48")!
+        let markerImage = UIImage(named: "location-marker")!
         let symbol = AGSPictureMarkerSymbol(image: markerImage)
         symbol.leaderOffsetY = markerImage.size.height/2
         symbol.offsetY = markerImage.size.height/2
@@ -170,4 +188,3 @@ class ViewController: UIViewController, UISearchBarDelegate, UITableViewDelegate
         }
     }
 }
-
