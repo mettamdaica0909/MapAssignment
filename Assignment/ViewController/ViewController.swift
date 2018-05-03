@@ -24,6 +24,7 @@ class ViewController: UIViewController, UISearchBarDelegate, UITableViewDelegate
     
     private var isTableViewVisible = true
     private var isTableViewAnimating = false
+    private var noResult = false
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -40,25 +41,29 @@ class ViewController: UIViewController, UISearchBarDelegate, UITableViewDelegate
         
         // init locatorTask
         self.locatorTask = AGSLocatorTask(url: URL(string: "https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer")!)
-        self.animateTableView(expand: false)
         
-        //initialize the graphics overlay and add to the map view
+        //init the graphics overlay and add to the map view
         self.graphicsOverlay = AGSGraphicsOverlay()
         self.mapView.graphicsOverlays.add(self.graphicsOverlay)
         
+        // tableview
         self.tableView.rowHeight = UITableViewAutomaticDimension
         self.tableView.estimatedRowHeight = 44
-        self.tableView.delegate = self
-        self.tableView.dataSource = self
+        self.tableviewheightContrains.constant = 0
+        self.animateTableView(expand: false)
         
+        // search bar
         self.searchBar.placeholder = "Enter place"
     }
     
     
     //MARK : searchbar delegate
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
-        print(searchBar.text ?? "")
-        self.getSuggestions(searchString: searchBar.text ?? "")
+        if (searchBar.text == "") {
+            self.animateTableView(expand: false)
+        } else {
+            self.getSuggestions(searchString: searchBar.text ?? "")
+        }
     }
     
     //MARK : tableview delegate
@@ -67,6 +72,11 @@ class ViewController: UIViewController, UISearchBarDelegate, UITableViewDelegate
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        if (self.noResult || self.suggestResults?.count == 0) {
+            self.animateTableView(expand: true)
+            return 1
+        }
+        
         var rows = 0
         if let count = self.suggestResults?.count {
             rows = count
@@ -78,13 +88,13 @@ class ViewController: UIViewController, UISearchBarDelegate, UITableViewDelegate
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "LocationCell", for: indexPath) as! LocationCell
         
-        if (self.suggestResults.count > 0) {
+        if (self.noResult) {
+            cell.contentLabel.text = "There is no result"
+            cell.locationImage.isHidden = true
+        } else {
             let suggestResult = self.suggestResults[indexPath.row]
             cell.contentLabel.text = suggestResult.label
             cell.locationImage.isHidden = false
-        } else {
-            cell.contentLabel.text = "There is no result"
-            cell.locationImage.isHidden = true
         }
         
         return cell
@@ -114,19 +124,26 @@ class ViewController: UIViewController, UISearchBarDelegate, UITableViewDelegate
     }
     
     private func animateTableView(expand:Bool) {
-        if (expand != self.isTableViewVisible) && !self.isTableViewAnimating {
+        if !self.isTableViewAnimating {
             self.isTableViewAnimating = true
-            self.tableviewheightContrains.constant = expand ? CGFloat(self.suggestResults.count * 44) : 0
+            if (self.noResult) {
+                self.tableviewheightContrains.constant = 44
+            } else {
+                self.tableviewheightContrains.constant = expand ? CGFloat(self.suggestResults.count * 44) : 0
+            }
             UIView.animate(withDuration: 0.1, animations: { [weak self] () -> Void in
                 self?.view.layoutIfNeeded()
                 }, completion: { [weak self] (finished) -> Void in
                     self?.isTableViewAnimating = false
-                    self?.isTableViewVisible = expand
             })
         }
     }
     
     private func getSuggestions(searchString : String) {
+        if (searchString == "") {
+            return
+        }
+        
         //remove all previous graphics
         self.graphicsOverlay.graphics.removeAllObjects()
         
@@ -137,12 +154,11 @@ class ViewController: UIViewController, UISearchBarDelegate, UITableViewDelegate
         self.suggestRequestOperation = self.locatorTask.suggest(withSearchText: searchString, completion: { (result, error) in
             if let error = error {
                 print(error.localizedDescription)
-                self.suggestResults = []
-                self.tableView.reloadData()
             }
             else {
-                //update the suggest results and reload the table
+                //update the results and reload the table
                 self.suggestResults = result
+                self.noResult = false
                 self.tableView.reloadData()
             }
         })
@@ -157,24 +173,6 @@ class ViewController: UIViewController, UISearchBarDelegate, UITableViewDelegate
         return graphic
     }
     
-    
-    @IBAction func zoomOut(_ sender: Any) {
-        self.zoom(isZoomIn: false)
-    }
-    @IBAction func zoomIn(_ sender: Any) {
-        self.zoom(isZoomIn: true)
-    }
-    @IBAction func reCenter(_ sender: Any) {
-        self.mapView.locationDisplay.autoPanMode = .recenter
-        self.mapView.locationDisplay.start { (error : Error?) in
-            if let error = error {
-                print("location display start failure")
-            } else {
-                print("success")
-            }
-        }
-    }
-    
     private func zoom(isZoomIn : Bool) {
         let currentScale = self.mapView.mapScale
         
@@ -183,8 +181,27 @@ class ViewController: UIViewController, UISearchBarDelegate, UITableViewDelegate
             return
         }
         
-        self.mapView.setViewpoint(AGSViewpoint(center: currentCenter, scale: newScale), duration: 1, curve: AGSAnimationCurve.easeInOutSine) { (finishedWithoutInterruption) -> Void in
-            // TODO
+        self.mapView.setViewpoint(AGSViewpoint(center: currentCenter, scale: newScale), duration: 1, curve: AGSAnimationCurve.easeInOutSine) { (zoomSuccess) -> Void in
+            if (!zoomSuccess) {
+                self.showAlert("Zoom Failed", okHandler: nil)
+            }
+        }
+    }
+    
+    @IBAction func zoomOut(_ sender: Any) {
+        self.zoom(isZoomIn: false)
+    }
+    
+    @IBAction func zoomIn(_ sender: Any) {
+        self.zoom(isZoomIn: true)
+    }
+    
+    @IBAction func reCenter(_ sender: Any) {
+        self.mapView.locationDisplay.autoPanMode = .recenter
+        self.mapView.locationDisplay.start { (error : Error?) in
+            if let error = error {
+                self.showAlert(error.localizedDescription, okHandler: nil)
+            }
         }
     }
 }

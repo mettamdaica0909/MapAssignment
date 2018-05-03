@@ -52,6 +52,16 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
+		D980D737209AA31F0075481F /* ViewController */ = {
+			isa = PBXGroup;
+			children = (
+				D99C5867209A294100155855 /* Cell */,
+				D9CC87BA209316CF0068F01F /* Main.storyboard */,
+				D9CC87B8209316CF0068F01F /* ViewController.swift */,
+			);
+			path = ViewController;
+			sourceTree = "<group>";
+		};
 		D99C5862209A105E00155855 /* Extension */ = {
 			isa = PBXGroup;
 			children = (
@@ -90,9 +100,7 @@
 			isa = PBXGroup;
 			children = (
 				D9CC87B6209316CF0068F01F /* AppDelegate.swift */,
-				D9CC87B8209316CF0068F01F /* ViewController.swift */,
-				D9CC87BA209316CF0068F01F /* Main.storyboard */,
-				D99C5867209A294100155855 /* Cell */,
+				D980D737209AA31F0075481F /* ViewController */,
 				D99C5862209A105E00155855 /* Extension */,
 				D9CC87BD209316CF0068F01F /* Assets.xcassets */,
 				D9CC87BF209316D00068F01F /* LaunchScreen.storyboard */,
