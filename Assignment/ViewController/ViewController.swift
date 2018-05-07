@@ -72,7 +72,7 @@ class ViewController: UIViewController, UISearchBarDelegate, UITableViewDelegate
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        if (self.noResult || self.suggestResults?.count == 0) {
+        if (self.noResult) {
             self.animateTableView(expand: true)
             return 1
         }
@@ -151,14 +151,33 @@ class ViewController: UIViewController, UISearchBarDelegate, UITableViewDelegate
             self.suggestRequestOperation.cancel()
         }
         
-        self.suggestRequestOperation = self.locatorTask.suggest(withSearchText: searchString, completion: { (result, error) in
+//        self.suggestRequestOperation = self.locatorTask.suggest(withSearchText: searchString, completion: { (result, error) in
+//            if let error = error {
+//                print(error.localizedDescription)
+//            }
+//            else {
+//                //update the results and reload the table
+//                self.suggestResults = result
+//                self.noResult = false
+//                self.tableView.reloadData()
+//            }
+//        })
+        
+        let suggestParameters = AGSSuggestParameters()
+        suggestParameters.countryCode = "Vietnam"
+        
+        self.suggestRequestOperation = self.locatorTask.suggest(withSearchText: searchString, parameters: suggestParameters, completion: { (result, error) in
             if let error = error {
                 print(error.localizedDescription)
             }
             else {
                 //update the results and reload the table
                 self.suggestResults = result
-                self.noResult = false
+                if (result?.count == 0) {
+                    self.noResult = true
+                } else{
+                    self.noResult = false
+                }
                 self.tableView.reloadData()
             }
         })
